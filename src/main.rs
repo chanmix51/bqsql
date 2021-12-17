@@ -1,17 +1,17 @@
+use bqsql::*;
 use std::{error::Error, path::PathBuf};
-
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 struct Application {
-    #[structopt(short = "p", about = "GCP project identifier")]
+    #[structopt(long, short = "p", about = "GCP project identifier")]
     project_id: String,
-    #[structopt(short = "d", about = "BigQuery dataset name")]
-    dataset_id: Option<String>,
-    #[structopt(parse(from_os_str), short = "j", about = "filepath of the JSON credential file", env="GOOGLE_CREDENTIALS")]
-    credential_filepath: PathBuf,
+    #[structopt(long, short = "d", about = "BigQuery dataset name")]
+    dataset_id: String,
+    #[structopt(long, parse(from_os_str), short = "j", about = "filepath of the JSON credential file", env="GOOGLE_CREDENTIALS")]
+    credential_filepath: Option<PathBuf>,
 }
 
 impl Application {
@@ -26,7 +26,9 @@ impl Application {
             match readline {
                 Ok(line) => {
                     rl.add_history_entry(line.as_str());
-                    println!("Line: {}", line);
+                    let output = BqClient::new(&self.project_id, &self.dataset_id)
+                        .query(&line)?;
+                    println!("{}", output);
                 },
                 Err(ReadlineError::Interrupted) => {
                     rl.save_history("history.txt").unwrap();

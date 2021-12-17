@@ -1,11 +1,16 @@
 use bqsql::*;
-use std::{error::Error, path::PathBuf};
+use rand::distributions::Alphanumeric;
+use rand::Rng; 
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
+use std::{error::Error, path::PathBuf};
+use std::env;
+use std::fs::File;
+use std::io::Write;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-struct Application {
+struct ApplicationParameters {
     #[structopt(long, short = "p", about = "GCP project identifier")]
     project_id: String,
     #[structopt(long, short = "d", about = "BigQuery dataset name")]
@@ -14,7 +19,29 @@ struct Application {
     credential_filepath: Option<PathBuf>,
 }
 
+struct Application {
+    project_id: String,
+    tmp_filename: String,
+}
+
 impl Application {
+    pub fn new(parameters: ApplicationParameters) -> Application {
+        let filename = {
+            let tmpname = rand::thread_rng()
+                    .sample_iter(&Alphanumeric)
+                    .take(10)
+                    .map(char::from)
+                    .collect::<String>()
+                ;
+            format!("{}/bqsql_{}", env::temp_dir().to_str().unwrap(), tmpname)
+        };
+
+        Application {
+            project_id: parameters.project_id,
+            tmp_filename: filename,
+        }
+    }
+
     pub fn execute(&mut self) -> Result<(), Box<dyn Error>> {
         // `()` can be used when no completer is required
         let mut rl = Editor::<()>::new();
@@ -26,8 +53,11 @@ impl Application {
             match readline {
                 Ok(line) => {
                     rl.add_history_entry(line.as_str());
-                    let output = BqClient::new(&self.project_id, &self.dataset_id)
-                        .query(&line)?;
+                    {
+                        let mut file = File::create(&self.tmp_filename)?;
+                        write!(file, "{}", line.as_str())?;
+                    }
+                    let output = BqClient::query(&self.project_id, &self.tmp_filename)?;
                     println!("{}", output);
                 },
                 Err(ReadlineError::Interrupted) => {
@@ -46,12 +76,15 @@ impl Application {
             }
         }
         rl.save_history("history.txt").unwrap();
+        std::fs::remove_file(&self.tmp_filename)?;
 
         Ok(())
     }
 }
+
 fn main() {
-    Application::from_args()
+    let params = ApplicationParameters::from_args();
+    Application::new(params)
         .execute()
         .unwrap_or_else(|err| { eprintln!("ERROR: {}", err); std::process::exit(1) });
 }

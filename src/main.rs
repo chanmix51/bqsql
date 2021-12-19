@@ -15,13 +15,6 @@ struct ApplicationParameters {
     credential_filepath: Option<PathBuf>,
 }
 
-        /*
-    pub fn execute(&mut self) -> Result<(), Box<dyn Error>> {
-        std::fs::remove_file(&self.tmp_filename)?;
-    }
-}
-*/
-
 struct Application {
     chain: ResponsabilityChain
 }

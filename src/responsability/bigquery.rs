@@ -6,6 +6,7 @@ use std::env;
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::PathBuf;
 use super::*;
 
 #[derive(Debug)]
@@ -41,5 +42,15 @@ impl Responsability for BigQueryResponsability {
         let lines = vec![self.bq_client.query(&self.filename)?];
 
         Ok(Response { query: query, lines: lines })
+    }
+}
+
+impl Drop for BigQueryResponsability {
+    fn drop(&mut self) {
+        let filepath = PathBuf::from(&self.filename);
+
+        if filepath.exists() {
+            let _ = std::fs::remove_file(filepath);
+        }
     }
 }

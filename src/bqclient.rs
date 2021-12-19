@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::ffi::OsStr;
 use std::process::Command;
 use std::fmt::Debug;
 

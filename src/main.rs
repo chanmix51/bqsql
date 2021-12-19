@@ -2,7 +2,6 @@ use bqsql::*;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use std::{error::Error, path::PathBuf};
-use std::env;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -22,6 +21,7 @@ struct Application {
 impl Application {
     pub fn new(params: ApplicationParameters) -> Self {
         let chain = ResponsabilityChain::new(vec![
+            Box::new(CleanQueryResponsability {}),
             Box::new(BigQueryResponsability::new(Box::new(BqBinary::new(&params.project_id))))
         ]);
 
@@ -44,7 +44,9 @@ impl Application {
                     if response.query.add_history {
                         rl.add_history_entry(line.as_str());
                     }
-                    println!("{:?}", response.lines);
+                    for line in response.lines {
+                        println!("{}", line);
+                    }
                 },
                 Err(ReadlineError::Interrupted) => {
                     rl.save_history("history.txt").unwrap();

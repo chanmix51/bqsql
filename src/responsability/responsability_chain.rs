@@ -1,5 +1,5 @@
 use crate::{Query, Response};
-use std::{error::Error};
+use std::error::Error;
 use std::iter::Iterator;
 use std::fmt::Debug;
 
@@ -29,13 +29,14 @@ impl ResponsabilityChain {
         responsability.take(iterator, query)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
     
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+
+    // ↓ This is a dumb Responsability used for testing
     #[derive(Debug)]
-    struct CountChars {}
+    pub struct CountChars {}
 
     impl Responsability for CountChars {
     fn take(
@@ -44,11 +45,12 @@ mod tests {
         query: Query
     ) -> Result<Response, Box<dyn Error>> {
         Ok(Response {
-            lines: vec![format!("There are {} chars in query.", query.query.len())],
+            lines: vec![format!("{}", query.query.len())],
             query: query,
             })
         }
     }
+
 
     #[test]
     pub fn test_simple() {
@@ -59,6 +61,6 @@ mod tests {
         );
         let query = Query { query: String::from("pikachu"), add_history: false, is_buffered: false };
         let response = chain.launch(query).unwrap();
-        assert_eq!("There are 7 chars in query.", &response.lines[0]);
+        assert_eq!("7", &response.lines[0]);
     }
 }

@@ -1,12 +1,8 @@
 use bqsql::*;
-use rand::distributions::Alphanumeric;
-use rand::Rng; 
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use std::{error::Error, path::PathBuf};
 use std::env;
-use std::fs::File;
-use std::io::Write;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -19,30 +15,27 @@ struct ApplicationParameters {
     credential_filepath: Option<PathBuf>,
 }
 
+        /*
+    pub fn execute(&mut self) -> Result<(), Box<dyn Error>> {
+        std::fs::remove_file(&self.tmp_filename)?;
+    }
+}
+*/
+
 struct Application {
-    project_id: String,
-    tmp_filename: String,
+    chain: ResponsabilityChain
 }
 
 impl Application {
-    pub fn new(parameters: ApplicationParameters) -> Application {
-        let filename = {
-            let tmpname = rand::thread_rng()
-                    .sample_iter(&Alphanumeric)
-                    .take(10)
-                    .map(char::from)
-                    .collect::<String>()
-                ;
-            format!("{}/bqsql_{}", env::temp_dir().to_str().unwrap(), tmpname)
-        };
+    pub fn new(params: ApplicationParameters) -> Self {
+        let chain = ResponsabilityChain::new(vec![
+            Box::new(BigQueryResponsability::new(Box::new(BqBinary::new(&params.project_id))))
+        ]);
 
-        Application {
-            project_id: parameters.project_id,
-            tmp_filename: filename,
-        }
+        Self { chain }
     }
 
-    pub fn execute(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn execute(&self) -> Result<(), Box<dyn Error>> {
         // `()` can be used when no completer is required
         let mut rl = Editor::<()>::new();
         if rl.load_history("history.txt").is_err() {
@@ -52,13 +45,13 @@ impl Application {
             let readline = rl.readline(">> ");
             match readline {
                 Ok(line) => {
-                    rl.add_history_entry(line.as_str());
-                    {
-                        let mut file = File::create(&self.tmp_filename)?;
-                        write!(file, "{}", line.as_str())?;
+                    let query = Query::new(&line);
+                    let response = self.chain.launch(query)?;
+
+                    if response.query.add_history {
+                        rl.add_history_entry(line.as_str());
                     }
-                    let output = BqClient::query(&self.project_id, &self.tmp_filename)?;
-                    println!("{}", output);
+                    println!("{:?}", response.lines);
                 },
                 Err(ReadlineError::Interrupted) => {
                     rl.save_history("history.txt").unwrap();
@@ -76,15 +69,14 @@ impl Application {
             }
         }
         rl.save_history("history.txt").unwrap();
-        std::fs::remove_file(&self.tmp_filename)?;
 
         Ok(())
     }
 }
-
 fn main() {
     let params = ApplicationParameters::from_args();
     Application::new(params)
         .execute()
         .unwrap_or_else(|err| { eprintln!("ERROR: {}", err); std::process::exit(1) });
+
 }

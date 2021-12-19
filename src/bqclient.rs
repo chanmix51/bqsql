@@ -26,6 +26,7 @@ impl BqClient for BqBinary {
             .arg("query")
             .arg("--quiet")
             .arg("--use_legacy_sql=false")
+            .arg("--headless")
             .arg("--flagfile")
             .arg(sql_filename)
             .output().unwrap();

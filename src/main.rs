@@ -10,8 +10,8 @@ struct ApplicationParameters {
     project_id: String,
     #[structopt(long, short = "d", about = "BigQuery dataset name")]
     dataset_id: String,
-    #[structopt(long, parse(from_os_str), short = "j", about = "filepath of the JSON credential file", env="GOOGLE_CREDENTIALS")]
-    credential_filepath: Option<PathBuf>,
+    #[structopt(long, parse(from_os_str), short = "j", about = "filepath of the JSON credential file", env="GOOGLE_APPLICATION_CREDENTIALS")]
+    credential_filepath: PathBuf,
 }
 
 struct Application {

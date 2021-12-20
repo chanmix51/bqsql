@@ -1,9 +1,9 @@
-use std::error::Error;
 use std::process::Command;
 use std::fmt::Debug;
+use super::*;
 
 pub trait BqClient: Debug {
-    fn query(&self, sql_filename: &str) -> Result<String, Box<dyn Error>>;
+    fn query(&self, sql_filename: &str) -> Result<String>;
 }
 
 #[derive(Debug)]
@@ -18,7 +18,7 @@ impl BqBinary {
 }
 
 impl BqClient for BqBinary {
-    fn query(&self, sql_filename: &str) -> Result<String, Box<dyn Error>> {
+    fn query(&self, sql_filename: &str) -> Result<String> {
         // launch bq with that file
         let output = Command::new("/usr/bin/bq")
             .arg("--project_id")

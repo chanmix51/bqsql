@@ -1,9 +1,8 @@
 use crate::bqclient::BqClient;
-use crate::{Query, Response};
+use crate::*;
 use rand::distributions::Alphanumeric;
 use rand::Rng; 
 use std::env;
-use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
@@ -36,7 +35,7 @@ impl Responsability for BigQueryResponsability {
         &self,
         _iterator: std::slice::Iter<Box<dyn Responsability>>,
         query: Query
-    ) -> Result<Response, Box<dyn Error>> {
+    ) -> Result<Response> {
         let mut file = File::create(&self.filename)?;
         write!(file, "{}", &query.query)?;
         let lines = vec![self.bq_client.query(&self.filename)?];

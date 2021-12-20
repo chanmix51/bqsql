@@ -1,5 +1,4 @@
 use bqsql::*;
-use std::error::Error;
 
 #[derive(Debug)]
 struct BigQueryResponsabilityMock {}
@@ -9,7 +8,7 @@ impl Responsability for BigQueryResponsabilityMock {
         &self,
         _iterator: std::slice::Iter<Box<dyn Responsability>>,
         query: Query
-    ) -> Result<Response, Box<dyn Error>> {
+    ) -> Result<Response> {
        Ok(Response { query, lines: vec![String::from("pika")]})
     }
 }

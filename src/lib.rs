@@ -1,3 +1,6 @@
+pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
+mod error;
 mod query;
 mod responsability;
 mod response;

@@ -1,7 +1,7 @@
 use bqsql::*;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
-use std::{error::Error, path::PathBuf};
+use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -28,7 +28,7 @@ impl Application {
         Self { chain }
     }
 
-    pub fn execute(&self) -> Result<(), Box<dyn Error>> {
+    pub fn execute(&self) -> Result<()> {
         // `()` can be used when no completer is required
         let mut rl = Editor::<()>::new();
         if rl.load_history("history.txt").is_err() {

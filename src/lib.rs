@@ -10,3 +10,4 @@ pub use response::Response;
 pub use query::Query;
 pub use responsability::*;
 pub use bqclient::*;
+pub use error::BqSqlError;

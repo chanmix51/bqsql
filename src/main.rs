@@ -22,6 +22,7 @@ impl Application {
     pub fn new(params: ApplicationParameters) -> Self {
         let chain = ResponsabilityChain::new(vec![
             Box::new(CleanQueryResponsability {}),
+            Box::new(BigClientResponsability {}),
             Box::new(BigQueryResponsability::new(Box::new(BqBinary::new(&params.project_id))))
         ]);
 

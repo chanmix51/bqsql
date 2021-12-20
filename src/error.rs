@@ -1,7 +1,5 @@
-use std::ops::Deref;
-
 #[derive(Debug)]
-enum BqSqlError {
+pub enum BqSqlError {
     BqError(Box<dyn std::error::Error>),
     Standard(String),
 }

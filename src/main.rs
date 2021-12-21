@@ -10,12 +10,20 @@ struct ApplicationParameters {
     project_id: String,
     #[structopt(long, short = "d", about = "BigQuery dataset name")]
     dataset_id: String,
-    #[structopt(long, parse(from_os_str), short = "j", about = "filepath of the JSON credential file", env="GOOGLE_APPLICATION_CREDENTIALS")]
+    #[structopt(
+        long,
+        parse(from_os_str),
+        short = "j",
+        about = "filepath of the JSON credential file",
+        env = "GOOGLE_APPLICATION_CREDENTIALS"
+    )]
     credential_filepath: PathBuf,
 }
 
 struct Application {
-    chain: ResponsabilityChain
+    chain: ResponsabilityChain,
+    project_id: String,
+    dataset_id: String,
 }
 
 impl Application {
@@ -23,10 +31,16 @@ impl Application {
         let chain = ResponsabilityChain::new(vec![
             Box::new(CleanQueryResponsability {}),
             Box::new(BigClientResponsability {}),
-            Box::new(BigQueryResponsability::new(Box::new(BqBinary::new(&params.project_id))))
+            Box::new(BigQueryResponsability::new(Box::new(BqBinary::new(
+                &params.project_id,
+            )))),
         ]);
 
-        Self { chain }
+        Self {
+            project_id: params.project_id,
+            dataset_id: params.dataset_id,
+            chain,
+        }
     }
 
     pub fn execute(&self) -> Result<()> {
@@ -39,7 +53,7 @@ impl Application {
             let readline = rl.readline(">> ");
             match readline {
                 Ok(line) => {
-                    let query = Query::new(&line);
+                    let query = Query::new(&self.project_id, &self.dataset_id, &line);
                     let response = self.chain.launch(query)?;
 
                     if response.query.add_history {
@@ -48,15 +62,13 @@ impl Application {
                     for line in response.lines {
                         println!("{}", line);
                     }
-                },
+                }
                 Err(ReadlineError::Interrupted) => {
                     rl.save_history("history.txt").unwrap();
 
-                    return Err(Box::new(ReadlineError::Interrupted))
-                },
-                Err(ReadlineError::Eof) => {
-                    break
-                },
+                    return Err(Box::new(ReadlineError::Interrupted));
+                }
+                Err(ReadlineError::Eof) => break,
                 Err(err) => {
                     rl.save_history("history.txt").unwrap();
 
@@ -69,10 +81,11 @@ impl Application {
         Ok(())
     }
 }
+
 fn main() {
     let params = ApplicationParameters::from_args();
-    Application::new(params)
-        .execute()
-        .unwrap_or_else(|err| { eprintln!("ERROR: {}", err); std::process::exit(1) });
-
+    Application::new(params).execute().unwrap_or_else(|err| {
+        eprintln!("ERROR: {}", err);
+        std::process::exit(1)
+    });
 }

@@ -1,12 +1,12 @@
+use super::*;
 use crate::bqclient::BqClient;
 use crate::*;
 use rand::distributions::Alphanumeric;
-use rand::Rng; 
+use rand::Rng;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
-use super::*;
 
 #[derive(Debug)]
 pub struct BigQueryResponsability {
@@ -21,12 +21,18 @@ impl BigQueryResponsability {
                 .sample_iter(&Alphanumeric)
                 .take(10)
                 .map(char::from)
-                .collect::<String>()
-            ;
-            format!("{}/bqsql_{}.sql", env::temp_dir().to_str().unwrap(), tmpname)
+                .collect::<String>();
+            format!(
+                "{}/bqsql_{}.sql",
+                env::temp_dir().to_str().unwrap(),
+                tmpname
+            )
         };
 
-        Self { bq_client: client, filename }
+        Self {
+            bq_client: client,
+            filename,
+        }
     }
 }
 
@@ -34,13 +40,16 @@ impl Responsability for BigQueryResponsability {
     fn take(
         &self,
         _iterator: std::slice::Iter<Box<dyn Responsability>>,
-        query: Query
+        query: Query,
     ) -> Result<Response> {
         let mut file = File::create(&self.filename)?;
         write!(file, "{}", &query.query)?;
-        let lines = vec![self.bq_client.query(&self.filename)?];
+        let lines = vec![self.bq_client.query(&self.filename, &query.dataset_id)?];
 
-        Ok(Response { query: query, lines: lines })
+        Ok(Response {
+            query: query,
+            lines: lines,
+        })
     }
 }
 

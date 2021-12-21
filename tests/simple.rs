@@ -20,7 +20,7 @@ fn simple_application() {
             Box::new(BigQueryResponsabilityMock {})
         ]
     );
-    let query = Query::new("chu");
+    let query = Query::new("chatever", "whatever", "chu");
     let response = chain.launch(query).unwrap();
 
     assert_eq!(String::from("pika"), response.lines[0]);

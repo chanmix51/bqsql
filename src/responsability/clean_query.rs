@@ -43,7 +43,7 @@ mod tests {
             Box::new(CountChars {}),
         ]);
 
-        let response = chain.launch(Query::new("  ein  ")).unwrap();
+        let response = chain.launch(Query::new("whatever", "whatever", "  ein  ")).unwrap();
         assert_eq!("3", response.lines[0]);
     }
 }

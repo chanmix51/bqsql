@@ -59,7 +59,13 @@ pub mod tests {
                 Box::new(CountChars {}),
             ]
         );
-        let query = Query { query: String::from("pikachu"), add_history: false, is_buffered: false };
+        let query = Query {
+            query: String::from("pikachu"),
+            add_history: false,
+            is_buffered: false,
+            project_id: String::from("whatever"),
+            dataset_id: String::from("whatever"),
+        };
         let response = chain.launch(query).unwrap();
         assert_eq!("7", &response.lines[0]);
     }
